@@ -1,144 +1,163 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>APLIKASI UJIAN</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APLIKASI UJIAN</title>
 
-<style>
-body { margin: 0; font-family: Arial, sans-serif; background: white; }
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: white;
+        }
 
-.header {
-    background: #510375;
-    color: white;
-    padding: 10px;
-    text-align: center;
-    font-size: 22px;
-    font-weight: bold;
-}
+        .header {
+            background: #510375;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
 
-iframe {
-    width: 100vw;
-    height: calc(100vh - 50px);
-    border: none;
-}
+        iframe {
+            width: 100vw;
+            height: calc(100vh - 50px);
+            border: none;
+        }
 
-/* Halaman terkunci */
-#lockScreen {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    background: #b30000;
-    color: white;
-    text-align: center;
-    padding-top: 80px;
-    display: none;
-    z-index: 99999;
-}
+        /* Halaman terkunci */
+        #lockScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #b30000;
+            color: white;
+            text-align: center;
+            padding-top: 80px;
+            display: none;
+            z-index: 9999;
+        }
 
-#lockScreen input, #lockScreen button {
-    display: none;
-    padding: 12px;
-    font-size: 18px;
-    width: 80%;
-    max-width: 300px;
-    border-radius: 6px;
-    border: none;
-    margin-top: 10px;
-}
+        #lockScreen input, 
+        #lockScreen button {
+            display: none;
+            padding: 12px;
+            font-size: 18px;
+            width: 80%;
+            max-width: 300px;
+            border-radius: 6px;
+            border: none;
+            margin-top: 10px;
+        }
 
-#lockScreen button {
-    background: black;
-    color: white;
-    cursor: pointer;
-}
+        #lockScreen button {
+            background: black;
+            color: white;
+            cursor: pointer;
+        }
 
-/* Area rahasia admin */
-#secretArea {
-    position: fixed;
-    bottom: 0; right: 0;
-    width: 90px; height: 90px;
-    opacity: 0;
-    z-index: 100000;
-}
-</style>
+        /* Area rahasia di pojok kanan bawah */
+        #secretArea {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            width: 90px;
+            height: 90px;
+            z-index: 10000;
+            opacity: 0; /* tidak terlihat */
+        }
+    </style>
 </head>
-
 <body>
 
 <div class="header">APLIKASI UJIAN</div>
 
-<!-- Google Form -->
-<iframe src="https://docs.google.com/forms/d/e/1FAIpQLSf7Mjg38nXx1VOBTt5LeAjB1fYLc-cb1QwUFSRwxsVxRX_vig/viewform?usp=header"></iframe>
+<!-- GANTI GOOGLE FORM DI SINI -->
+<iframe src="https://docs.google.com/forms/d/e/1FAIpQLSf4YUjm7hCY4cHV8FCEi5wEU93CzW_W08Nr9b27ZTVBTSxDYw/viewform?usp=header"></iframe>
 
-<!-- Halaman Terkunci -->
+
+<!-- Halaman terkunci -->
 <div id="lockScreen">
     <h1>⚠️ HALAMAN UJIAN TERKUNCI</h1>
-    <p>Sistem mendeteksi Anda mencoba keluar dari halaman ujian.</p>
-    <p>Jangan meninggalkan halaman selama ujian berlangsung.</p>
+    <p>Sistem mendeteksi Anda keluar dari halaman ujian.</p>
+    <p>Jangan keluar halaman selama ujian berlangsung.</p>
 
     <input type="password" id="kunci" placeholder="Masukkan kunci panitia">
     <button onclick="bukaUjian()">Buka Ujian</button>
 </div>
 
-<!-- Area rahasia -->
+<!-- Area rahasia → tekan 5 detik untuk admin -->
 <div id="secretArea"></div>
 
 <script>
-const storageKey = "locked_pkas";
-const kunciPanitia = "SMK2024";
+/* ================================================
+   MAPEL INFORMATIKA
+   STORAGE KHUSUS MAPEL INI
+   ================================================ */
+const storageKey = "locked_pkas";   // GANTI UNTUK MAPEL LAIN
+const kunciPanitia = "SMK2024";            // Password admin
 
-let adminAllowed = false;
+
+
+/* ============= Area Rahasia ============= */
 let holdTimer = null;
+const secretArea = document.getElementById("secretArea");
 
-/* ==============================
-   TAMPILKAN HALAMAN TERKUNCI
-================================ */
-function munculKunci() {
-    localStorage.setItem(storageKey, "true");
-
-    // PENTING: siswa tidak boleh buka panel admin
-    adminAllowed = false;
-
-    document.getElementById("lockScreen").style.display = "block";
-    document.body.style.overflow = "hidden";
-
-    document.getElementById("kunci").style.display = "none";
-    document.querySelector("#lockScreen button").style.display = "none";
-}
-
-/* ==============================
-   AREA RAHASIA ADMIN
-================================ */
 function showAdminPanel() {
-    if (!adminAllowed) return; // siswa tidak bisa membuka panel admin
-
     document.getElementById("kunci").style.display = "block";
     document.querySelector("#lockScreen button").style.display = "inline-block";
 }
 
 function startHold() {
-    holdTimer = setTimeout(showAdminPanel, 5000);
+    holdTimer = setTimeout(showAdminPanel, 5000); // 5 detik tahan
 }
 function endHold() {
     clearTimeout(holdTimer);
 }
 
-["mousedown","touchstart","pointerdown"].forEach(e =>
-    secretArea.addEventListener(e, startHold)
-);
-["mouseup","touchend","pointerup"].forEach(e =>
-    secretArea.addEventListener(e, endHold)
-);
+secretArea.addEventListener("mousedown", startHold);
+secretArea.addEventListener("mouseup", endHold);
+secretArea.addEventListener("touchstart", startHold);
+secretArea.addEventListener("touchend", endHold);
+secretArea.addEventListener("pointerdown", startHold);
+secretArea.addEventListener("pointerup", endHold);
 
-/* ==============================
-   BUKA KUNCI ADMIN
-================================ */
+
+
+/* ============= Cek status kunci saat halaman dibuka ============= */
+if (localStorage.getItem(storageKey) === "true") {
+    munculKunci();
+}
+
+
+
+/* ============= Deteksi siswa keluar halaman ============= */
+document.addEventListener("visibilitychange", function () {
+    if (document.hidden) {
+        localStorage.setItem(storageKey, "true");
+        munculKunci();
+    }
+});
+
+
+
+/* ============= Tampilkan layar kunci ============= */
+function munculKunci() {
+    document.getElementById("lockScreen").style.display = "block";
+    document.body.style.overflow = "hidden";
+}
+
+
+
+/* ============= Buka kembali dengan kunci panitia ============= */
 function bukaUjian() {
     const input = document.getElementById("kunci").value;
+
     if (input === kunciPanitia) {
+        // Hapus kunci untuk mapel ini saja
         localStorage.removeItem(storageKey);
-        adminAllowed = false;
 
         document.getElementById("lockScreen").style.display = "none";
         document.body.style.overflow = "auto";
@@ -146,50 +165,8 @@ function bukaUjian() {
         document.getElementById("kunci").style.display = "none";
         document.querySelector("#lockScreen button").style.display = "none";
     } else {
-        alert("❌ Kunci salah!");
+        alert("❌ Kunci salah! Hubungi panitia.");
     }
-}
-
-/* ==============================
-   ANTI CHEAT SUPER KETAT
-================================ */
-
-// ganti tab
-document.addEventListener("visibilitychange", () => {
-    if (document.hidden) munculKunci();
-});
-
-// minimize / pindah aplikasi
-window.addEventListener("blur", () => munculKunci());
-document.addEventListener("blur", () => munculKunci());
-
-// buka recent apps (Android)
-window.addEventListener("pagehide", () => munculKunci());
-
-// sebelum halaman ditutup
-window.addEventListener("beforeunload", () => munculKunci());
-
-// kehilangan fokus sedikit saja
-window.addEventListener("focusout", () => munculKunci());
-
-// tombol curang
-document.addEventListener("keydown", (event) => {
-    const forbidden = ["Tab", "Meta", "Alt", "Escape", "F11"];
-
-    if (
-        forbidden.includes(event.key) ||
-        event.altKey || event.ctrlKey || event.metaKey
-    ) {
-        event.preventDefault();
-        munculKunci();
-    }
-});
-
-/* ==============================
-   KUNCI JIKA SUDAH PERNAH TERKUNCI
-================================ */
-if (localStorage.getItem(storageKey) === "true") {
-    munculKunci();
 }
 </script>
 

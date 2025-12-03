@@ -65,6 +65,7 @@ iframe {
 </head>
 
 <body>
+
 <div class="header">APLIKASI UJIAN</div>
 
 <!-- Google Form -->
@@ -80,7 +81,7 @@ iframe {
     <button onclick="bukaUjian()">Buka Ujian</button>
 </div>
 
-<!-- Area Rahasia Admin -->
+<!-- Area rahasia -->
 <div id="secretArea"></div>
 
 <script>
@@ -91,11 +92,13 @@ let adminAllowed = false;
 let holdTimer = null;
 
 /* ==============================
-   FUNGSI TAMPILKAN HALAMAN TERKUNCI
+   TAMPILKAN HALAMAN TERKUNCI
 ================================ */
 function munculKunci() {
     localStorage.setItem(storageKey, "true");
-    adminAllowed = true;
+
+    // PENTING: siswa tidak boleh buka panel admin
+    adminAllowed = false;
 
     document.getElementById("lockScreen").style.display = "block";
     document.body.style.overflow = "hidden";
@@ -108,7 +111,7 @@ function munculKunci() {
    AREA RAHASIA ADMIN
 ================================ */
 function showAdminPanel() {
-    if (!adminAllowed) return;
+    if (!adminAllowed) return; // siswa tidak bisa membuka panel admin
 
     document.getElementById("kunci").style.display = "block";
     document.querySelector("#lockScreen button").style.display = "inline-block";
@@ -117,7 +120,6 @@ function showAdminPanel() {
 function startHold() {
     holdTimer = setTimeout(showAdminPanel, 5000);
 }
-
 function endHold() {
     clearTimeout(holdTimer);
 }
@@ -152,23 +154,25 @@ function bukaUjian() {
    ANTI CHEAT SUPER KETAT
 ================================ */
 
-// 1. Pindah tab / buka app lain
+// ganti tab
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) munculKunci();
 });
 
-// 2. Fokus hilang sedikit saja
-document.addEventListener("blur", () => munculKunci());
+// minimize / pindah aplikasi
 window.addEventListener("blur", () => munculKunci());
-window.addEventListener("focusout", () => munculKunci());
+document.addEventListener("blur", () => munculKunci());
 
-// 3. Geser aplikasi (Android recent apps)
+// buka recent apps (Android)
 window.addEventListener("pagehide", () => munculKunci());
 
-// 4. Sebelum halaman benar-benar pindah (paling cepat)
+// sebelum halaman ditutup
 window.addEventListener("beforeunload", () => munculKunci());
 
-// 5. Tekan tombol curang
+// kehilangan fokus sedikit saja
+window.addEventListener("focusout", () => munculKunci());
+
+// tombol curang
 document.addEventListener("keydown", (event) => {
     const forbidden = ["Tab", "Meta", "Alt", "Escape", "F11"];
 
@@ -182,7 +186,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 /* ==============================
-   JIKA SUDAH TERKUNCI SEBELUMNYA
+   KUNCI JIKA SUDAH PERNAH TERKUNCI
 ================================ */
 if (localStorage.getItem(storageKey) === "true") {
     munculKunci();

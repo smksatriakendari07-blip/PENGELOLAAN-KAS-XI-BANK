@@ -73,8 +73,8 @@ iframe {
 <!-- Layar Terkunci -->
 <div id="lockScreen">
     <h1>⚠️ HALAMAN UJIAN TERKUNCI</h1>
-    <p>Sistem mendeteksi Anda keluar dari halaman ujian.</p>
-    <p>Jangan keluar halaman selama ujian berlangsung.</p>
+    <p>Sistem mendeteksi Anda mencoba keluar dari halaman ujian.</p>
+    <p>Jangan meninggalkan halaman selama ujian berlangsung.</p>
 
     <input type="password" id="kunci" placeholder="Masukkan kunci panitia">
     <button onclick="bukaUjian()">Buka Ujian</button>
@@ -84,32 +84,31 @@ iframe {
 <div id="secretArea"></div>
 
 <script>
-const storageKey = "locked_pkas"; 
+const storageKey = "locked_pkas";
 const kunciPanitia = "SMK2024";
 
-let adminAllowed = false; // 🔒 tombol admin hanya bisa muncul bila halaman sudah terkunci
+let adminAllowed = false;
 let holdTimer = null;
 
-/* ========================
-    FUNGSI KUNCI UJIAN
-======================== */
+/* ==========================
+   Fungsi Tampilkan Kunci
+========================== */
 function munculKunci() {
     localStorage.setItem(storageKey, "true");
-    adminAllowed = true; // setelah terkunci → admin diizinkan membuka input lewat area rahasia
+    adminAllowed = true;
 
     document.getElementById("lockScreen").style.display = "block";
     document.body.style.overflow = "hidden";
 
-    // pastikan tombol admin HILANG dulu
     document.getElementById("kunci").style.display = "none";
     document.querySelector("#lockScreen button").style.display = "none";
 }
 
-/* ==============================
-    AREA RAHASIA 5 DETIK ADMIN
-==============================*/
+/* ==========================
+   Area Rahasia Admin
+========================== */
 function showAdminPanel() {
-    if (!adminAllowed) return; // ❗ siswa tidak bisa memunculkan tombol admin
+    if (!adminAllowed) return;
     document.getElementById("kunci").style.display = "block";
     document.querySelector("#lockScreen button").style.display = "inline-block";
 }
@@ -122,16 +121,16 @@ function endHold() {
     clearTimeout(holdTimer);
 }
 
-["mousedown", "touchstart", "pointerdown"].forEach(evt =>
-    document.getElementById("secretArea").addEventListener(evt, startHold)
+["mousedown","touchstart","pointerdown"].forEach(e =>
+    secretArea.addEventListener(e, startHold)
 );
-["mouseup", "touchend", "pointerup"].forEach(evt =>
-    document.getElementById("secretArea").addEventListener(evt, endHold)
+["mouseup","touchend","pointerup"].forEach(e =>
+    secretArea.addEventListener(e, endHold)
 );
 
-/* ========================
-    BUKA KUNCI ADMIN
-======================== */
+/* ==========================
+   Buka Kunci Admin
+========================== */
 function bukaUjian() {
     const input = document.getElementById("kunci").value;
     if (input === kunciPanitia) {
@@ -144,24 +143,50 @@ function bukaUjian() {
         document.getElementById("kunci").style.display = "none";
         document.querySelector("#lockScreen button").style.display = "none";
     } else {
-        alert("❌ Kunci salah! Hubungi panitia.");
+        alert("❌ Kunci salah!");
     }
 }
 
-/* ========================
-    DETEKSI KELUAR TAB
-======================== */
+/* ==========================
+   DETEKSI PINDAH TAB NORMAL
+========================== */
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) munculKunci();
 });
 
-/* ======================================
-    DETEKSI ALT+TAB, CTRL+TAB, WINDOWS, TAB
-====================================== */
+/* ================================================
+   NEW! ANTI-ATTEMPT LOCK (PALING KETAT)
+   Mengunci SEBELUM benar-benar pindah halaman
+================================================ */
+
+// 1. Begitu fokus sedikit hilang
+document.addEventListener("focusout", () => {
+    munculKunci();
+});
+
+// 2. Sebelum tab berganti / back ditekan
+window.addEventListener("beforeunload", () => {
+    munculKunci();
+});
+
+// 3. Ketika halaman mulai disembunyikan (lebih cepat dari visibilitychange)
+window.addEventListener("pagehide", () => {
+    munculKunci();
+});
+
+// 4. Fokus ke aplikasi lain (ALT+TAB, klik taskbar)
+window.addEventListener("blur", () => {
+    munculKunci();
+});
+
+/* ================================================
+   DETEKSI TOMBOL CURANG
+================================================ */
 document.addEventListener("keydown", (event) => {
-    const forbiddenKeys = ["Tab", "Meta", "Alt", "Escape", "F11"];
+    const forbidden = ["Tab", "Meta", "Alt", "Escape", "F11"];
+
     if (
-        forbiddenKeys.includes(event.key) ||
+        forbidden.includes(event.key) ||
         event.altKey || event.ctrlKey || event.metaKey
     ) {
         event.preventDefault();
@@ -169,16 +194,9 @@ document.addEventListener("keydown", (event) => {
     }
 });
 
-/* ========================
-    DETEKSI PINDAH APLIKASI
-======================== */
-window.addEventListener("blur", () => {
-    munculKunci();
-});
-
-/* ========================
-    Cek jika sebelumnya terkunci
-======================== */
+/* ==========================
+   Kunci Jika Sudah Terkunci Sebelumnya
+========================== */
 if (localStorage.getItem(storageKey) === "true") {
     munculKunci();
 }

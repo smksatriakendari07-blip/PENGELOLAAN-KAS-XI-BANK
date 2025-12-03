@@ -1,84 +1,76 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>APLIKASI UJIAN</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APLIKASI UJIAN</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: white;
-        }
+<style>
+body { margin: 0; font-family: Arial, sans-serif; background: white; }
 
-        .header {
-            background: #510375;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-        }
+.header {
+    background: #510375;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+}
 
-        iframe {
-            width: 100vw;
-            height: calc(100vh - 50px);
-            border: none;
-        }
+iframe {
+    width: 100vw;
+    height: calc(100vh - 50px);
+    border: none;
+}
 
-        /* Halaman terkunci */
-        #lockScreen {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: #b30000;
-            color: white;
-            text-align: center;
-            padding-top: 80px;
-            display: none;
-            z-index: 9999;
-        }
+/* Layar terkunci */
+#lockScreen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #b30000;
+    color: white;
+    text-align: center;
+    padding-top: 80px;
+    display: none;
+    z-index: 9999;
+}
 
-        #lockScreen input, 
-        #lockScreen button {
-            display: none;
-            padding: 12px;
-            font-size: 18px;
-            width: 80%;
-            max-width: 300px;
-            border-radius: 6px;
-            border: none;
-            margin-top: 10px;
-        }
+#lockScreen input, #lockScreen button {
+    display: none;
+    padding: 12px;
+    font-size: 18px;
+    width: 80%;
+    max-width: 300px;
+    border-radius: 6px;
+    border: none;
+    margin-top: 10px;
+}
 
-        #lockScreen button {
-            background: black;
-            color: white;
-            cursor: pointer;
-        }
+#lockScreen button {
+    background: black;
+    color: white;
+    cursor: pointer;
+}
 
-        /* Area rahasia di pojok kanan bawah */
-        #secretArea {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            width: 90px;
-            height: 90px;
-            z-index: 10000;
-            opacity: 0; /* tidak terlihat */
-        }
-    </style>
+/* Area rahasia admin */
+#secretArea {
+    position: fixed;
+    bottom: 0; right: 0;
+    width: 90px; height: 90px;
+    opacity: 0;
+    z-index: 10000;
+}
+</style>
 </head>
-<body>
 
+<body>
 <div class="header">APLIKASI UJIAN</div>
 
-<!-- GANTI GOOGLE FORM DI SINI -->
+<!-- Google Form -->
 <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSf7Mjg38nXx1VOBTt5LeAjB1fYLc-cb1QwUFSRwxsVxRX_vig/viewform?usp=header"></iframe>
 
-
-<!-- Halaman terkunci -->
+<!-- Layar Terkunci -->
 <div id="lockScreen">
     <h1>⚠️ HALAMAN UJIAN TERKUNCI</h1>
     <p>Sistem mendeteksi Anda keluar dari halaman ujian.</p>
@@ -88,76 +80,63 @@
     <button onclick="bukaUjian()">Buka Ujian</button>
 </div>
 
-<!-- Area rahasia → tekan 5 detik untuk admin -->
+<!-- Area rahasia -->
 <div id="secretArea"></div>
 
 <script>
-/* ================================================
-   MAPEL INFORMATIKA
-   STORAGE KHUSUS MAPEL INI
-   ================================================ */
-const storageKey = "locked_pkas";   // GANTI UNTUK MAPEL LAIN
-const kunciPanitia = "SMK2024";            // Password admin
+const storageKey = "locked_pkas"; 
+const kunciPanitia = "SMK2024";
 
-
-
-/* ============= Area Rahasia ============= */
+let adminAllowed = false; // 🔒 tombol admin hanya bisa muncul bila halaman sudah terkunci
 let holdTimer = null;
-const secretArea = document.getElementById("secretArea");
 
+/* ========================
+    FUNGSI KUNCI UJIAN
+======================== */
+function munculKunci() {
+    localStorage.setItem(storageKey, "true");
+    adminAllowed = true; // setelah terkunci → admin diizinkan membuka input lewat area rahasia
+
+    document.getElementById("lockScreen").style.display = "block";
+    document.body.style.overflow = "hidden";
+
+    // pastikan tombol admin HILANG dulu
+    document.getElementById("kunci").style.display = "none";
+    document.querySelector("#lockScreen button").style.display = "none";
+}
+
+/* ==============================
+    AREA RAHASIA 5 DETIK ADMIN
+==============================*/
 function showAdminPanel() {
+    if (!adminAllowed) return; // ❗ siswa tidak bisa memunculkan tombol admin
     document.getElementById("kunci").style.display = "block";
     document.querySelector("#lockScreen button").style.display = "inline-block";
 }
 
 function startHold() {
-    holdTimer = setTimeout(showAdminPanel, 5000); // 5 detik tahan
+    holdTimer = setTimeout(showAdminPanel, 5000);
 }
+
 function endHold() {
     clearTimeout(holdTimer);
 }
 
-secretArea.addEventListener("mousedown", startHold);
-secretArea.addEventListener("mouseup", endHold);
-secretArea.addEventListener("touchstart", startHold);
-secretArea.addEventListener("touchend", endHold);
-secretArea.addEventListener("pointerdown", startHold);
-secretArea.addEventListener("pointerup", endHold);
+["mousedown", "touchstart", "pointerdown"].forEach(evt =>
+    document.getElementById("secretArea").addEventListener(evt, startHold)
+);
+["mouseup", "touchend", "pointerup"].forEach(evt =>
+    document.getElementById("secretArea").addEventListener(evt, endHold)
+);
 
-
-
-/* ============= Cek status kunci saat halaman dibuka ============= */
-if (localStorage.getItem(storageKey) === "true") {
-    munculKunci();
-}
-
-
-
-/* ============= Deteksi siswa keluar halaman ============= */
-document.addEventListener("visibilitychange", function () {
-    if (document.hidden) {
-        localStorage.setItem(storageKey, "true");
-        munculKunci();
-    }
-});
-
-
-
-/* ============= Tampilkan layar kunci ============= */
-function munculKunci() {
-    document.getElementById("lockScreen").style.display = "block";
-    document.body.style.overflow = "hidden";
-}
-
-
-
-/* ============= Buka kembali dengan kunci panitia ============= */
+/* ========================
+    BUKA KUNCI ADMIN
+======================== */
 function bukaUjian() {
     const input = document.getElementById("kunci").value;
-
     if (input === kunciPanitia) {
-        // Hapus kunci untuk mapel ini saja
         localStorage.removeItem(storageKey);
+        adminAllowed = false;
 
         document.getElementById("lockScreen").style.display = "none";
         document.body.style.overflow = "auto";
@@ -167,6 +146,41 @@ function bukaUjian() {
     } else {
         alert("❌ Kunci salah! Hubungi panitia.");
     }
+}
+
+/* ========================
+    DETEKSI KELUAR TAB
+======================== */
+document.addEventListener("visibilitychange", () => {
+    if (document.hidden) munculKunci();
+});
+
+/* ======================================
+    DETEKSI ALT+TAB, CTRL+TAB, WINDOWS, TAB
+====================================== */
+document.addEventListener("keydown", (event) => {
+    const forbiddenKeys = ["Tab", "Meta", "Alt", "Escape", "F11"];
+    if (
+        forbiddenKeys.includes(event.key) ||
+        event.altKey || event.ctrlKey || event.metaKey
+    ) {
+        event.preventDefault();
+        munculKunci();
+    }
+});
+
+/* ========================
+    DETEKSI PINDAH APLIKASI
+======================== */
+window.addEventListener("blur", () => {
+    munculKunci();
+});
+
+/* ========================
+    Cek jika sebelumnya terkunci
+======================== */
+if (localStorage.getItem(storageKey) === "true") {
+    munculKunci();
 }
 </script>
 
